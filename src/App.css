@@ -168,7 +168,7 @@
 .panels {
   flex: 1;
   display: grid;
-  grid-template-columns: 280px 1fr 320px;
+  grid-template-columns: 280px 220px 1fr;
   min-height: 0;
   overflow: hidden;
 }
@@ -269,14 +269,125 @@
   color: #57606a;
 }
 
-/* 변경 파일 목록 */
+/* 변경 파일 목록 + diff */
+.files-content {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.file-list-wrap {
+  flex: 0 0 220px;
+  min-width: 0;
+  overflow-y: auto;
+  border-right: 1px solid #d0d7de;
+}
+
 .file-list li {
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.file-list li button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
   padding: 0.4rem 1rem;
   font-size: 0.85rem;
-  border-bottom: 1px solid #f0f2f5;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+
+.file-list li button:hover {
+  background: #f6f8fa;
+}
+
+.file-list li button.active {
+  background: #ddf4ff;
+}
+
+.diff-view {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f6f8fa;
+}
+
+.diff-header {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #eaeef2;
+  border-bottom: 1px solid #d0d7de;
+  word-break: break-all;
+}
+
+.diff-body {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.diff-line {
+  display: flex;
+  min-height: 1.5em;
+  padding: 0 0.5rem;
+}
+
+.diff-line-num {
+  flex-shrink: 0;
+  width: 2.5em;
+  padding-right: 0.75rem;
+  text-align: right;
+  color: #8b949e;
+  user-select: none;
+}
+
+.diff-line-content {
+  overflow-x: auto;
+}
+
+.diff-add {
+  background: #dafbe1;
+}
+
+.diff-add .diff-line-content {
+  color: #1a7f37;
+}
+
+.diff-del {
+  background: #ffebe9;
+}
+
+.diff-del .diff-line-content {
+  color: #cf222e;
+}
+
+.diff-ctx .diff-line-content {
+  color: #1a1a1a;
+}
+
+.diff-placeholder,
+.diff-empty {
+  padding: 2rem 1rem;
+  margin: 0;
+  color: #57606a;
+  font-size: 0.9rem;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .file-status {
@@ -374,7 +485,58 @@
     border-bottom-color: #21262d;
   }
 
+  .file-list li button:hover {
+    background: #21262d;
+  }
+
+  .file-list li button.active {
+    background: #1f6feb33;
+  }
+
   .file-name {
     color: #e6edf3;
+  }
+
+  .file-list-wrap {
+    border-right-color: #30363d;
+  }
+
+  .diff-view {
+    background: #0d1117;
+  }
+
+  .diff-header {
+    background: #161b22;
+    border-bottom-color: #30363d;
+    color: #e6edf3;
+  }
+
+  .diff-add {
+    background: #1a7f3726;
+  }
+
+  .diff-add .diff-line-content {
+    color: #3fb950;
+  }
+
+  .diff-del {
+    background: #cf222e26;
+  }
+
+  .diff-del .diff-line-content {
+    color: #f85149;
+  }
+
+  .diff-ctx .diff-line-content {
+    color: #e6edf3;
+  }
+
+  .diff-line-num {
+    color: #8b949e;
+  }
+
+  .diff-placeholder,
+  .diff-empty {
+    color: #8b949e;
   }
 }

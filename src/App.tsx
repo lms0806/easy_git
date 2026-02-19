@@ -1,5 +1,4 @@
-import { useState, useCallback } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { useState, useCallback, useEffect } from "react";
 import {
   fetchRepos,
   fetchCommits,
@@ -19,28 +18,57 @@ function App() {
       return "";
     }
   });
+  const [tokenInput, setTokenInput] = useState("");
   const [loginError, setLoginError] = useState("");
   const [userLogin, setUserLogin] = useState("");
+
+  // 저장된 토큰이 있으면 유효성 검사 후 로그인 상태 복원
+  useEffect(() => {
+    if (!token) return;
+    if (userLogin) return;
+    let cancelled = false;
+    validateToken(token)
+      .then((user) => {
+        if (!cancelled) setUserLogin(user.login);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setToken("");
+          try {
+            localStorage.removeItem(TOKEN_KEY);
+          } catch {}
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, userLogin]);
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null);
   const [commits, setCommits] = useState<GitHubCommitSummary[]>([]);
   const [selectedCommit, setSelectedCommit] = useState<GitHubCommitSummary | null>(null);
   const [files, setFiles] = useState<GitHubCommitFile[]>([]);
+  const [selectedFile, setSelectedFile] = useState<GitHubCommitFile | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
 
   const isLoggedIn = !!token && !!userLogin;
 
   const handleLogin = useCallback(async () => {
     setLoginError("");
+    const t = tokenInput.trim();
+    if (!t) {
+      setLoginError("Access Token을 입력해 주세요.");
+      return;
+    }
     setLoading("login");
     try {
-      const accessToken = await invoke<string>("github_oauth_login");
-      const t = accessToken.trim();
-      if (!t) throw new Error("토큰을 받지 못했습니다.");
       const user = await validateToken(t);
       setUserLogin(user.login);
       setToken(t);
-      localStorage.setItem(TOKEN_KEY, t);
+      setTokenInput("");
+      try {
+        localStorage.setItem(TOKEN_KEY, t);
+      } catch {}
       const list = await fetchRepos(t);
       setRepos(list);
       setSelectedRepo(null);
@@ -52,7 +80,7 @@ function App() {
     } finally {
       setLoading(null);
     }
-  }, []);
+  }, [tokenInput]);
 
   const handleLogout = useCallback(() => {
     setToken("");
@@ -92,6 +120,7 @@ function App() {
       if (!token || !selectedRepo || selectedCommit?.sha === commit.sha) return;
       setSelectedCommit(commit);
       setFiles([]);
+      setSelectedFile(null);
       setLoading("files");
       try {
         const [owner] = selectedRepo.full_name.split("/");
@@ -118,25 +147,35 @@ function App() {
         <div className="login-box">
           <h1>Easy Git</h1>
           <p className="login-desc">
-            GitHub로 로그인하면
+            GitHub Personal Access Token을 입력하면
             <br />
-            본인 레포와 커밋 이력을 쉽게 볼 수 있습니다.
+            레포와 커밋 이력을 쉽게 볼 수 있습니다.
           </p>
           <div className="login-form">
+            <input
+              type="password"
+              className="input-token"
+              placeholder="GitHub Access Token"
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+              disabled={loading === "login"}
+              autoComplete="off"
+            />
             <button
               type="button"
               className="btn-github-login"
               onClick={handleLogin}
               disabled={loading === "login"}
             >
-              {loading === "login" ? "로그인 진행 중…" : "GitHub로 로그인"}
+              {loading === "login" ? "로그인 중…" : "로그인"}
             </button>
           </div>
           {loginError && <p className="login-error">{loginError}</p>}
           <p className="login-hint">
-            로그인 시 브라우저가 열립니다. GitHub에서 앱 권한을 승인해 주세요.
+            GitHub → Settings → Developer settings → Personal access tokens 에서
             <br />
-            (OAuth 앱 설정이 필요하면 README를 참고하세요.)
+            토큰을 생성한 뒤 여기에 붙여 넣으세요. (repo 권한 필요)
           </p>
         </div>
       </div>
@@ -207,20 +246,68 @@ function App() {
               <span className="panel-sub"> — {selectedCommit.sha.slice(0, 7)}</span>
             )}
           </h2>
-          {loading === "files" && <p className="loading">변경 파일 불러오는 중…</p>}
-          <ul className="file-list">
-            {files.map((f, i) => (
-              <li key={f.filename + i}>
-                <span className={`file-status status-${f.status}`}>
-                  {f.status}
-                </span>
-                <span className="file-name">{f.filename}</span>
-                <span className="file-diff">
-                  +{f.additions} -{f.deletions}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="files-content">
+            <div className="file-list-wrap">
+              {loading === "files" && <p className="loading">변경 파일 불러오는 중…</p>}
+              <ul className="file-list">
+                {files.map((f, i) => (
+                  <li key={f.filename + i}>
+                    <button
+                      type="button"
+                      className={selectedFile?.filename === f.filename ? "active" : ""}
+                      onClick={() => setSelectedFile(f)}
+                    >
+                      <span className={`file-status status-${f.status}`}>
+                        {f.status}
+                      </span>
+                      <span className="file-name">{f.filename}</span>
+                      <span className="file-diff">
+                        +{f.additions} -{f.deletions}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="diff-view">
+              {selectedFile ? (
+                <>
+                  <div className="diff-header">{selectedFile.filename}</div>
+                  {selectedFile.patch ? (
+                    <pre className="diff-body">
+                      {selectedFile.patch.split("\n").map((line, i) => (
+                        <div
+                          key={i}
+                          className={
+                            line.startsWith("+")
+                              ? "diff-line diff-add"
+                              : line.startsWith("-")
+                                ? "diff-line diff-del"
+                                : "diff-line diff-ctx"
+                          }
+                        >
+                          <span className="diff-line-num">{i + 1}</span>
+                          <span className="diff-line-content">
+                            {line || " "}
+                          </span>
+                        </div>
+                      ))}
+                    </pre>
+                  ) : (
+                    <p className="diff-empty">
+                      이 파일은 diff를 표시할 수 없습니다.
+                      <br />
+                      (바이너리 또는 비공개 diff일 수 있습니다.)
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="diff-placeholder">
+                  왼쪽에서 파일을 클릭하면 diff를 볼 수 있습니다.
+                </p>
+              )}
+            </div>
+          </div>
         </section>
       </div>
     </div>
