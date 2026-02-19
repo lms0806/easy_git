@@ -37,6 +37,8 @@ export async function fetchCommits(
     : `repos/${owner}/${repo}/commits?per_page=100`;
   const res = await fetch(`${GITHUB_API}/${path}`, {
     headers: headers(token),
+    // revert 직후 등 최신 커밋이 바로 반영되도록 브라우저 캐시를 사용하지 않는다.
+    cache: "no-store",
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -54,7 +56,10 @@ export async function fetchCommitDetail(
 ): Promise<GitHubCommitDetail> {
   const res = await fetch(
     `${GITHUB_API}/repos/${owner}/${repo}/commits/${sha}`,
-    { headers: headers(token) }
+    {
+      headers: headers(token),
+      cache: "no-store",
+    }
   );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

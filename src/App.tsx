@@ -137,6 +137,22 @@ function App() {
       if (output) {
         console.log("git revert via temp clone output:", output);
       }
+      // revert가 성공하면 해당 레포의 커밋 목록을 다시 불러와서
+      // 새로 생성된 revert 커밋까지 UI에서 바로 볼 수 있게 한다.
+      try {
+        setLoading("commits");
+        const refreshedCommits = await fetchCommits(
+          token,
+          owner,
+          selectedRepo.name,
+          selectedRepo.default_branch,
+        );
+        setCommits(refreshedCommits);
+      } catch (e) {
+        console.error("failed to refresh commits after revert:", e);
+      } finally {
+        setLoading(null);
+      }
       setToast({
         type: "success",
         message: `git revert + push 완료: ${selectedRepo.full_name} · ${selectedRepo.default_branch} · ${contextMenu.commit.sha.slice(0, 7)}`,
