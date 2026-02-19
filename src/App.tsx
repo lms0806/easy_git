@@ -22,6 +22,8 @@ function App() {
   const [loginError, setLoginError] = useState("");
   const [userLogin, setUserLogin] = useState("");
 
+  const [repos, setRepos] = useState<GitHubRepo[]>([]);
+
   // 저장된 토큰이 있으면 유효성 검사 후 로그인 상태 복원
   useEffect(() => {
     if (!token) return;
@@ -43,7 +45,20 @@ function App() {
       cancelled = true;
     };
   }, [token, userLogin]);
-  const [repos, setRepos] = useState<GitHubRepo[]>([]);
+
+  // 세션 복원 후(토큰+userLogin만 있고 repos 비어 있음) 레포 목록 불러오기
+  useEffect(() => {
+    if (!token || !userLogin || repos.length > 0) return;
+    let cancelled = false;
+    fetchRepos(token)
+      .then((list) => {
+        if (!cancelled) setRepos(list);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [token, userLogin, repos.length]);
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null);
   const [commits, setCommits] = useState<GitHubCommitSummary[]>([]);
   const [selectedCommit, setSelectedCommit] = useState<GitHubCommitSummary | null>(null);
