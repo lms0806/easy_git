@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, MouseEvent } from "react";
 import {
   fetchRepos,
   fetchCommits,
@@ -6,9 +6,12 @@ import {
   validateToken,
 } from "./api/github";
 import type { GitHubRepo, GitHubCommitSummary, GitHubCommitFile } from "./types/github";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 const TOKEN_KEY = "easy_git_github_token";
+const LOCAL_REPO_KEY = "easy_git_local_repo_path";
 
 function App() {
   const [token, setToken] = useState(() => {
@@ -23,6 +26,13 @@ function App() {
   const [userLogin, setUserLogin] = useState("");
 
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
+  const [localRepoPath, setLocalRepoPath] = useState(() => {
+    try {
+      return localStorage.getItem(LOCAL_REPO_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
 
   // 저장된 토큰이 있으면 유효성 검사 후 로그인 상태 복원
   useEffect(() => {
@@ -65,8 +75,77 @@ function App() {
   const [files, setFiles] = useState<GitHubCommitFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<GitHubCommitFile | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    commit: GitHubCommitSummary | null;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    commit: null,
+  });
 
   const isLoggedIn = !!token && !!userLogin;
+
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  }, []);
+
+  const handleCommitContextMenu = useCallback(
+    (event: MouseEvent<HTMLButtonElement>, commit: GitHubCommitSummary) => {
+      event.preventDefault();
+      setContextMenu({
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        commit,
+      });
+    },
+    [],
+  );
+
+  const handleCopyRevertCommand = useCallback(async () => {
+    if (!contextMenu.commit || !selectedRepo || !token) return;
+    const [owner] = selectedRepo.full_name.split("/");
+    try {
+      const output = await invoke<string>("revert_commit_via_temp_clone", {
+        owner,
+        repo: selectedRepo.name,
+        sha: contextMenu.commit.sha,
+        branch: selectedRepo.default_branch,
+        token,
+      });
+      alert(
+        `임시 클론에서 git revert + push가 실행되었습니다.\n\n레포: ${selectedRepo.full_name}\n브랜치: ${
+          selectedRepo.default_branch
+        }\n대상 커밋: ${contextMenu.commit.sha.slice(0, 7)}\n\n출력:\n${
+          output || "(출력 없음)"
+        }`,
+      );
+    } catch (e) {
+      alert(
+        `임시 클론을 이용한 git revert 실행에 실패했습니다.\n\n${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      );
+    } finally {
+      handleCloseContextMenu();
+    }
+  }, [contextMenu.commit, handleCloseContextMenu, selectedRepo, token]);
+
+  const handleOpenCommitInGitHub = useCallback(async () => {
+    if (!contextMenu.commit) return;
+    const url = contextMenu.commit.html_url;
+    try {
+      await openUrl(url);
+    } catch {
+      window.open(url, "_blank");
+    } finally {
+      handleCloseContextMenu();
+    }
+  }, [contextMenu.commit, handleCloseContextMenu]);
 
   const handleLogin = useCallback(async () => {
     setLoginError("");
@@ -106,6 +185,15 @@ function App() {
     setSelectedCommit(null);
     setFiles([]);
     localStorage.removeItem(TOKEN_KEY);
+  }, []);
+
+  const handleLocalRepoPathChange = useCallback((value: string) => {
+    setLocalRepoPath(value);
+    try {
+      localStorage.setItem(LOCAL_REPO_KEY, value);
+    } catch {
+      // ignore
+    }
   }, []);
 
   const handleSelectRepo = useCallback(
@@ -202,6 +290,15 @@ function App() {
       <header className="header">
         <span className="header-title">Easy Git</span>
         <span className="header-user">{userLogin}</span>
+        <div className="header-local-repo">
+          <input
+            type="text"
+            className="input-local-repo"
+            placeholder="로컬 Git 레포 경로 (예: C:\\work\\my-repo)"
+            value={localRepoPath}
+            onChange={(e) => handleLocalRepoPathChange(e.target.value)}
+          />
+        </div>
         <button type="button" className="btn-logout" onClick={handleLogout}>
           로그아웃
         </button>
@@ -241,6 +338,7 @@ function App() {
                   type="button"
                   className={selectedCommit?.sha === c.sha ? "active" : ""}
                   onClick={() => handleSelectCommit(c)}
+                  onContextMenu={(e) => handleCommitContextMenu(e, c)}
                 >
                   <span className="commit-msg">
                     {c.commit.message.split("\n")[0]}
@@ -325,6 +423,22 @@ function App() {
           </div>
         </section>
       </div>
+      {contextMenu.visible && contextMenu.commit && (
+        <div className="context-menu-backdrop" onClick={handleCloseContextMenu}>
+          <div
+            className="context-menu"
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button type="button" onClick={handleCopyRevertCommand}>
+              이 커밋을 원격에서 되돌리기 (임시 clone + push)
+            </button>
+            <button type="button" onClick={handleOpenCommitInGitHub}>
+              GitHub에서 이 커밋 페이지 열기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
