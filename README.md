@@ -31,7 +31,7 @@ npm run tauri dev
 ## 빌드 (Windows 실행 파일)
 
 ```bash
-npm run tauri build
+npm run tauri build --release
 ```
 
 생성된 실행 파일은 `src-tauri/target/release/` 에 있습니다.
