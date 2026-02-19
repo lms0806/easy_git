@@ -1,0 +1,380 @@
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f0f2f5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ——— 로그인 화면 ——— */
+.app.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #24292e 0%, #0d1117 100%);
+  color: #e6edf3;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.login-box h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.login-desc {
+  margin: 0 0 1.5rem;
+  color: #8b949e;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #0d1117;
+  color: #e6edf3;
+}
+
+.login-form input::placeholder {
+  color: #6e7681;
+}
+
+.login-form input:focus {
+  border-color: #58a6ff;
+  outline: none;
+}
+
+.login-form button {
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  background: #238636;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-github-login {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.btn-github-login:hover:not(:disabled) {
+  background: #2ea043;
+}
+
+.login-form button:hover:not(:disabled) {
+  background: #2ea043;
+}
+
+.login-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-error {
+  margin: 0.75rem 0 0;
+  color: #f85149;
+  font-size: 0.85rem;
+}
+
+.login-hint {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid #30363d;
+  color: #6e7681;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.login-hint code {
+  padding: 0.1em 0.4em;
+  background: #21262d;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+/* ——— 메인 레이아웃 (3단) ——— */
+.app.main-layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: #24292e;
+  color: #e6edf3;
+}
+
+.header-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.header-user {
+  margin-left: auto;
+  color: #8b949e;
+  font-size: 0.9rem;
+}
+
+.btn-logout {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: transparent;
+  color: #8b949e;
+  cursor: pointer;
+}
+
+.btn-logout:hover {
+  color: #e6edf3;
+  border-color: #8b949e;
+}
+
+.panels {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #d0d7de;
+  background: #fff;
+  overflow: hidden;
+}
+
+.panel:last-child {
+  border-right: none;
+}
+
+.panel h2 {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #f6f8fa;
+  border-bottom: 1px solid #d0d7de;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panel-sub {
+  font-weight: 400;
+  color: #57606a;
+}
+
+.panel-repos .repo-list,
+.panel-commits .commit-list,
+.panel-files .file-list {
+  flex: 1;
+  margin: 0;
+  padding: 0.5rem 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.repo-list li,
+.commit-list li {
+  padding: 0 0.5rem;
+}
+
+.repo-list button,
+.commit-list button {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #1a1a1a;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.repo-list button:hover,
+.commit-list button:hover {
+  background: #f6f8fa;
+}
+
+.repo-list button.active,
+.commit-list button.active {
+  background: #ddf4ff;
+  color: #0969da;
+}
+
+.repo-name {
+  display: block;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  font-size: 0.7rem;
+  color: #57606a;
+  margin-left: 0.25rem;
+}
+
+.commit-msg {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commit-meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: #57606a;
+}
+
+/* 변경 파일 목록 */
+.file-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.file-status {
+  flex-shrink: 0;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-added {
+  background: #dafbe1;
+  color: #1a7f37;
+}
+
+.status-removed {
+  background: #ffebe9;
+  color: #cf222e;
+}
+
+.status-modified {
+  background: #ddf4ff;
+  color: #0969da;
+}
+
+.status-renamed {
+  background: #fff8c5;
+  color: #9a6700;
+}
+
+.file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+}
+
+.file-diff {
+  flex-shrink: 0;
+  color: #57606a;
+  font-size: 0.8rem;
+}
+
+.loading {
+  padding: 1rem;
+  margin: 0;
+  color: #57606a;
+  font-size: 0.9rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #e6edf3;
+    background: #0d1117;
+  }
+
+  .panel {
+    background: #161b22;
+    border-right-color: #30363d;
+  }
+
+  .panel h2 {
+    background: #21262d;
+    border-bottom-color: #30363d;
+    color: #e6edf3;
+  }
+
+  .panel-sub {
+    color: #8b949e;
+  }
+
+  .repo-list button,
+  .commit-list button {
+    color: #e6edf3;
+  }
+
+  .repo-list button:hover,
+  .commit-list button:hover {
+    background: #21262d;
+  }
+
+  .repo-list button.active,
+  .commit-list button.active {
+    background: #1f6feb33;
+    color: #58a6ff;
+  }
+
+  .commit-meta,
+  .file-diff {
+    color: #8b949e;
+  }
+
+  .file-list li {
+    border-bottom-color: #21262d;
+  }
+
+  .file-name {
+    color: #e6edf3;
+  }
+}
