@@ -86,8 +86,24 @@ function App() {
     y: 0,
     commit: null,
   });
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error" | null;
+  }>({
+    message: "",
+    type: null,
+  });
 
   const isLoggedIn = !!token && !!userLogin;
+
+  // 토스트 자동 숨김
+  useEffect(() => {
+    if (!toast.type) return;
+    const id = setTimeout(() => {
+      setToast({ message: "", type: null });
+    }, 3000);
+    return () => clearTimeout(id);
+  }, [toast.type]);
 
   const handleCloseContextMenu = useCallback(() => {
     setContextMenu((prev) => ({ ...prev, visible: false }));
@@ -117,19 +133,21 @@ function App() {
         branch: selectedRepo.default_branch,
         token,
       });
-      alert(
-        `임시 클론에서 git revert + push가 실행되었습니다.\n\n레포: ${selectedRepo.full_name}\n브랜치: ${
-          selectedRepo.default_branch
-        }\n대상 커밋: ${contextMenu.commit.sha.slice(0, 7)}\n\n출력:\n${
-          output || "(출력 없음)"
-        }`,
-      );
+      // 성공 여부 확인을 위해 출력은 콘솔에만 남기고, 사용자 알림에는 노출하지 않는다.
+      if (output) {
+        console.log("git revert via temp clone output:", output);
+      }
+      setToast({
+        type: "success",
+        message: `git revert + push 완료: ${selectedRepo.full_name} · ${selectedRepo.default_branch} · ${contextMenu.commit.sha.slice(0, 7)}`,
+      });
     } catch (e) {
-      alert(
-        `임시 클론을 이용한 git revert 실행에 실패했습니다.\n\n${
+      setToast({
+        type: "error",
+        message: `git revert 실행 실패: ${
           e instanceof Error ? e.message : String(e)
         }`,
-      );
+      });
     } finally {
       handleCloseContextMenu();
     }
@@ -437,6 +455,11 @@ function App() {
               GitHub에서 이 커밋 페이지 열기
             </button>
           </div>
+        </div>
+      )}
+      {toast.type && (
+        <div className={`toast toast-${toast.type}`}>
+          <span className="toast-message">{toast.message}</span>
         </div>
       )}
     </div>

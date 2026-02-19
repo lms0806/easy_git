@@ -489,6 +489,39 @@
   font-size: 0.9rem;
 }
 
+.toast {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 1100;
+  min-width: 260px;
+  max-width: 420px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toast-success {
+  background: #dafbe1;
+  color: #1a7f37;
+  border: 1px solid #1a7f37;
+}
+
+.toast-error {
+  background: #ffebe9;
+  color: #cf222e;
+  border: 1px solid #cf222e;
+}
+
+.toast-message {
+  flex: 1;
+  word-break: break-all;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     color: #e6edf3;
@@ -602,5 +635,17 @@
 
   .context-menu button:hover {
     background: #21262d;
+  }
+
+  .toast-success {
+    background: #1a7f3726;
+    color: #3fb950;
+    border-color: #238636;
+  }
+
+  .toast-error {
+    background: #cf222e26;
+    color: #f85149;
+    border-color: #f85149;
   }
 }
